@@ -1,0 +1,61 @@
+---
+alwaysApply: true
+---
+
+
+  You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, Radix UI and Tailwind.
+  
+  Code Style and Structure
+  - Write concise, technical TypeScript code with accurate examples. Prioritize clarity and brevity.
+  - Use functional and declarative programming patterns; avoid classes.
+  - Prefer iteration and modularization over code duplication.
+  - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+  - Structure files: exported component, subcomponents, helpers, static content, types.
+  - Keep functions small and focused; eliminate unnecessary code.
+  
+  Naming Conventions
+  - Use lowercase with dashes for directories (e.g., components/auth-wizard).
+  - Favor named exports for components.
+  
+  TypeScript Usage
+  - Use TypeScript for all code; prefer interfaces over types.
+  - Avoid enums; use maps instead.
+  - Use functional components with TypeScript interfaces.
+  
+  Syntax and Formatting
+  - Use the "function" keyword for pure functions.
+  - Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+  - Use declarative JSX.
+  
+  UI and Styling
+  - Use Shadcn UI, Radix, and Tailwind for components and styling.
+  - Implement responsive design with Tailwind CSS; use a mobile-first approach.
+  - Avoid using inline styles – if Tailwind doesn’t provide the class, create a custom utility or add the style in a CSS file instead.
+  - Use arbitrary values in Tailwind (e.g. `bg-[#888888d4]`) when a utility class doesn’t exist for your case.  
+  - Only use inline styles when a value must be computed dynamically at runtime and cannot be expressed with Tailwind classes.
+  - Use clear and consistent naming conventions for custom CSS classes (e.g., BEM: block__element--modifier).
+  
+  Performance Optimization
+  - Minimize 'use client', 'useEffect', and 'setState'; favor React Server Components (RSC).
+  - Wrap client components in Suspense with fallback.
+  - Use dynamic loading for non-critical components.
+  - Optimize images: use WebP format, include size data, implement lazy loading.
+  
+  Key Conventions
+  - Use 'nuqs' for URL search parameter state management.
+  - Optimize Web Vitals (LCP, CLS, FID).
+  - Limit 'use client':
+    - Favor server components and Next.js SSR.
+    - Use only for Web API access in small components.
+    - Avoid for data fetching or state management.
+
+  Additional Guidelines
+  - Always begin responses with "✓ Rules applied" to confirm rule compliance.
+  - Ignore completely the folder named "temp" unless explicitly requested to read it or make changes to it.
+  - Use Vercel AI SDK following official documentation for AI integrations.
+  - Don't change the AI model used in the AI SDK unless specifically asked to change.
+  - Write minimal, concise code: avoid unnecessary comments; write self-documenting code with clear variable names.
+  - Focus on functional, clean code over verbose explanations.
+  - Eliminate redundant logic, variables, and imports; every line should serve a purpose.
+  
+  Follow Next.js docs for Data Fetching, Rendering, and Routing.

@@ -1,26 +1,71 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    --background: #EFEFEF;
+    --foreground: #171717;
+    --primary-green: #28df99;
+    --primary-green-hover: #22c288;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Global Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        345deg,
+        #2adf9a,
+        #2de1a2 21%,
+        #36e2a9,
+        #3fe4b2 39%,
+        #48e5b8 46%,
+        #51e6c1 54%,
+        #5ae7c6 61%,
+        #64e8cb 69%,
+        #6de9d2 79%,
+        #76ead6
+    );
+    border-radius: 12px;
+    position: relative;
+    top: 100px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+        345deg,
+        #25c98a,
+        #28ca92 21%,
+        #2fcb99,
+        #38cda2 39%,
+        #41cea8 46%,
+        #4acfb1 54%,
+        #53d0b6 61%,
+        #5cd1bb 69%,
+        #65d2c2 79%,
+        #6ed3c6
+    );
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #2adf9a transparent;
 }
