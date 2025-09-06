@@ -2,44 +2,15 @@ import { openai } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import mammoth from 'mammoth';
 import { PromptType } from '@/types';
-
-// Function to read all financial documents
-async function readFinancialDocuments(): Promise<string> {
-  const documentFiles = [
-    'financial_profile_meuzan.docx',
-    'financial_profile_mehamer.docx', 
-    'financial_profile_mehushav.docx',
-    'financial_profile_metachnen.docx'
-  ];
-  
-  const documentContents: string[] = [];
-  
-  for (const filename of documentFiles) {
-    try {
-      const buffer = readFileSync(join(process.cwd(), 'src/documents', filename));
-      const result = await mammoth.extractRawText({ buffer });
-      documentContents.push(`=== ${filename} ===\n${result.value}`);
-    } catch (error) {
-      console.error(`Error reading ${filename}:`, error);
-    }
-  }
-  
-  return documentContents.join('\n\n');
-}
 
 export async function POST(req: Request) {
   const { messages, type, context }: { messages: UIMessage[]; type?: PromptType; context?: string } = await req.json();
-  
   // Read system prompt from file
   const generalSystemPrompt = readFileSync(
     join(process.cwd(), 'src/prompts/system.md'),
     'utf-8'
   );
-
-  // Read financial documents
-  const documentsContent = await readFinancialDocuments();
 
   // Function to get specific prompt based on type
   const getSpecificPrompt = (promptType?: PromptType): string => {
@@ -59,20 +30,19 @@ export async function POST(req: Request) {
   };
 
   // Get specific prompt if type is provided
-  const specificPrompt = getSpecificPrompt(type);
-  let combinedSystemPrompt = specificPrompt 
-    ? `${generalSystemPrompt}\n\n${specificPrompt}`
-    : generalSystemPrompt;
-  
-  // Add financial documents as context
-  combinedSystemPrompt += `\n\These are the 4 available financial profiles:\n${documentsContent}`;
+  // const specificPrompt = getSpecificPrompt(type);
+  // let combinedSystemPrompt = specificPrompt 
+  //   ? `${generalSystemPrompt}\n\n${specificPrompt}`
+  //   : generalSystemPrompt;
+
+  let combinedSystemPrompt = generalSystemPrompt;
   
   // Add additional context if provided
   if (context) {
-    combinedSystemPrompt += `\n\nCurrent context:\n${context}\n\n`;
+    combinedSystemPrompt += `Context:\n${context}\n\n`;
   }  
   
-  console.log("combinedSystemPrompt", combinedSystemPrompt);
+  // console.log("combinedSystemPrompt", combinedSystemPrompt);
     
   const result = streamText({
     model: openai('gpt-5'),
@@ -88,6 +58,6 @@ export async function POST(req: Request) {
       totalTokens: usage.totalTokens,
     });
   });
-
+  
   return result.toUIMessageStreamResponse();
 }

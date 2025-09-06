@@ -23,6 +23,7 @@ export async function GET() {
           next_question: a.next_question,
         }));
 
+        //TODO: check if this is needed
         // question.options = q.answers.map(a => a.answer);
         // question.nextQuestions = q.answers.map(a => a.next_question);
       }

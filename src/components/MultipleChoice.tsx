@@ -10,7 +10,7 @@ export function MultipleChoice({ options, onSelect }: MultipleChoiceProps) {
         <button
           key={index}
           onClick={() => onSelect(option, index)}
-          className="w-full p-3 text-right bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[var(--primary-green)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-green)] focus:border-[var(--primary-green)] transition-colors"
+          className="w-4/5 px-3 py-5 text-right bg-[var(--primary-green)]/20 hover:bg-[var(--primary-green)]/40 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-green)] focus-visible:border-[var(--primary-green)] transition-colors"
         >
           {option}
         </button>

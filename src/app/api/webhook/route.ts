@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 interface WebhookData {
-  email: string;
+  phone: string;
   questionAnswerPairs: Array<{
     question: string;
     answer: string;
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email: data.email,
+        phone: data.phone,
         conversation: data.questionAnswerPairs,
         aiResponse: data.aiResponse,
         timestamp: new Date().toISOString(),

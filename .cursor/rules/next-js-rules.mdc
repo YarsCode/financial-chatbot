@@ -7,6 +7,7 @@ alwaysApply: true
   
   Code Style and Structure
   - Write concise, technical TypeScript code with accurate examples. Prioritize clarity and brevity.
+  - Make minimal changes, write clear code.
   - Use functional and declarative programming patterns; avoid classes.
   - Prefer iteration and modularization over code duplication.
   - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
