@@ -52,10 +52,10 @@ export default function ChatbotPage() {
     // Function to get profile image path
     const getProfileImagePath = (profile: string): string => {
         const profileMap: Record<string, string> = {
-            "המתכנן": "/financial-profiles-images/financial_profile_metachnen.jpeg",
-            "המהמר": "/financial-profiles-images/financial_profile_mehamer.jpeg", 
-            "המאוזן": "/financial-profiles-images/financial_profile_meuzan.jpeg",
-            "המחושב": "/financial-profiles-images/financial_profile_mehushav.jpeg",
+            "המתכנן": "/financial-profiles-images/financial_profile_metachnen.png",
+            "המהמר": "/financial-profiles-images/financial_profile_mehamer.png", 
+            "המאוזן": "/financial-profiles-images/financial_profile_meuzan.png",
+            "המחושב": "/financial-profiles-images/financial_profile_mehushav.png",
         };
         return profileMap[profile] || "";
     };
