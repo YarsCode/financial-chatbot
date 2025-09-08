@@ -14,6 +14,7 @@ export interface Answer {
     question_id: string;
     answer: string;
     next_question: string;
+    score?: string;
 }
 
 export interface ConversationItem {

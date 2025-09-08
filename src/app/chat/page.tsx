@@ -1,7 +1,5 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
 import { useState, useEffect, useRef } from "react";
 import { Question, ConversationItem, QuestionAnswerPair, Answer } from "@/types";
 import { NumberInput } from "@/components/NumberInput";
@@ -12,19 +10,17 @@ import { Loader } from "@/components/Loader";
 import styles from "./page.module.css";
 import { IoSend } from "react-icons/io5";
 import Image from "next/image";
+import { initMessages, systemMessages, getCtaMessage, getGreetingMessage } from "@/constants/messages";
+import { replacePlaceholders } from "@/utils/text";
 
-const greetingMessages = [
-    "היי,\nאני FUTURE.AI והמטרה שלי היא להוביל אותך להפסיק לפחד מכסף ולחיות בשלווה כלכלית.",
-    "אני הולך לשאול אותך מספר שאלות, כדי להכיר אותך יותר טוב ולעזור לך לתכנן את החיים העשירים שתמיד חלמת לחיות ולבנות תיק השקעות מגוון.",
-    "שנתחיל?",
-];
 
 export default function ChatbotPage() {
-    const { messages, sendMessage, status, error } = useChat({
-        transport: new DefaultChatTransport({
-            api: "/api/chat",
-        }),
-    });
+    //! DO NOT REMOVE THIS COMMENT - WE WILL NEED IT LATER
+    // const { messages, sendMessage, status, error } = useChat({
+    //     transport: new DefaultChatTransport({
+    //         api: "/api/chat",
+    //     }),
+    // });
 
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -45,6 +41,7 @@ export default function ChatbotPage() {
     const [userGender, setUserGender] = useState("");
     const [showCtaMessage, setShowCtaMessage] = useState(false);
     const [showProfileImage, setShowProfileImage] = useState(false);
+    const [userScore, setUserScore] = useState(0);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const textInputRef = useRef<HTMLInputElement>(null);
     const phoneInputRef = useRef<HTMLInputElement>(null);
@@ -87,22 +84,14 @@ export default function ChatbotPage() {
         if (container) {
             container.scrollTop = container.scrollHeight;
         }
-    }, [conversation, messages, showProfileImage, showCtaMessage]);
-
-    // Show next question only when AI finishes streaming
-    useEffect(() => {
-        if (pendingNextQuestion && messages.length > 0 && status === "ready") {
-            // showNextQuestion();
-            setPendingNextQuestion(false);
-        }
-    }, [messages, status]);
+    }, [conversation, showProfileImage, showCtaMessage]);
 
     // Show profile image when AI finishes streaming
     useEffect(() => {
-        if (questionnaireComplete && status === "ready" && messages.length > 0 && selectedProfile && !showProfileImage && !isLoadingProfile) {
+        if (questionnaireComplete && selectedProfile && !showProfileImage && !isLoadingProfile) {
             setShowProfileImage(true);
         }
-    }, [questionnaireComplete, status, messages.length, selectedProfile, showProfileImage, isLoadingProfile]);
+    }, [questionnaireComplete, selectedProfile, showProfileImage, isLoadingProfile]);
 
     // Show CTA message when profile image is displayed
     useEffect(() => {
@@ -135,14 +124,14 @@ export default function ChatbotPage() {
                 {
                     id: "start-message",
                     type: "answer",
-                    content: "מתחילים",
+                    content: systemMessages.startConversation,
                 },
             ]);
             
             setTimeout(() => {
                 setIsLoadingFirstQuestion(false);
                 showNextQuestion(0);
-            }, Math.random() * 700 + 500); // Random delay between 500-1200ms
+            }, Math.random() * 600 + 1200); // Random delay between 1200-1800ms
         }
     };
 
@@ -158,7 +147,7 @@ export default function ChatbotPage() {
                 {
                     id: questionId,
                     type: "question",
-                    content: nextQuestion.text,
+                    content: replacePlaceholders(nextQuestion.text, userName),
                     questionData: nextQuestion,
                 },
             ]);
@@ -171,6 +160,15 @@ export default function ChatbotPage() {
 
         // Extract answer text for display and context
         const answerText = typeof answer === 'string' ? answer : answer.answer;
+
+        // Calculate new score for multiple choice answers
+        let newScore = userScore;
+        if (typeof answer === 'object' && answer.score) {
+            const score = parseInt(answer.score) || 0;
+            newScore = userScore + score;
+            console.log('Score:', newScore);
+            setUserScore(newScore);
+        }
 
         // Add user's answer to conversation
         const answerId = typeof answer === 'string' ? currentQuestion.id + "_a1" : answer.answer_id;
@@ -186,6 +184,18 @@ export default function ChatbotPage() {
         // Set user name and gender based on question index
         if (currentQuestionIndex === 0) {
             setUserName(answerText.trim());
+            
+            // Add the after-first-question message
+            setTimeout(() => {
+                setConversation((prev) => [
+                    ...prev,
+                    {
+                        id: "after-first-question",
+                        type: "question",
+                        content: getGreetingMessage(answerText.trim()),
+                    },
+                ]);
+            }, 1000); // Small delay for better UX
         } else if (currentQuestionIndex === 1) {
             const selectedAnswer = typeof answer === 'object' ? answer : null;
             if (selectedAnswer && currentQuestion.answers) {
@@ -196,7 +206,7 @@ export default function ChatbotPage() {
 
         // Add to question-answer pairs for AI context
         const newQAPair: QuestionAnswerPair = {
-            question: currentQuestion.text,
+            question: replacePlaceholders(currentQuestion.text, userName),
             answer: answerText,
         };
         setQuestionAnswerPairs((prev) => [...prev, newQAPair]);
@@ -206,13 +216,13 @@ export default function ChatbotPage() {
         const isLastQuestion = currentQuestion.isLastQuestion || currentQuestionIndex === questions.length - 1;
         
         if (isLastQuestion) {
-            await handleFinalQuestionSubmission(answerText, newQAPair);
+            await handleFinalQuestionSubmission(answerText, newQAPair, newScore);
         } else {
             setIsLoading(true);
 
             setTimeout(() => {
                 setIsLoading(false);
-            }, Math.random() * 700 + 500); // Random delay between 500-1200ms
+            }, Math.random() * 600 + 1200); // Random delay between 1200-1800ms
         }
 
         if (typeof answer === 'object' && answer.next_question) {
@@ -221,47 +231,53 @@ export default function ChatbotPage() {
     };
 
     // Function that runs only at the end of the questionnaire
-    const handleFinalQuestionSubmission = async (answer: string, newQAPair: QuestionAnswerPair) => {
+    const handleFinalQuestionSubmission = async (answer: string, newQAPair: QuestionAnswerPair, finalScore: number) => {
         // Add analysis message to conversation instantly
         setConversation((prev) => [
             ...prev,
             {
                 id: "analysis-message",
                 type: "question",
-                content: "אספתי את כל המידע שאני צריך, תנו לי כמה רגעים לנתח את הנתונים ואומר לכם איזה סוג משקיעים אתם ואיך ניתן לשפר את המצב הנוכחי. פעולה זו עשויה להימשך מעל לדקה.",
+                content: systemMessages.analysisInProgress,
             },
         ]);
         
-        // Mark questionnaire as complete to show AI response
         setQuestionnaireComplete(true);
         setIsLoadingProfile(true);
         
-        // Build context message for profile selection
-        const contextMessage = await buildContextMessage([...questionAnswerPairs, newQAPair]);
-        
         try {
-            // First, get profile selection
+            // Get profile selection based on score and gender
             const profileResponse = await fetch("/api/chat/profile-selection", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ context: contextMessage }),
+                body: JSON.stringify({ score: finalScore, gender: userGender, userName }),
             });
             
-            const profile = await profileResponse.json();
-            setSelectedProfile(profile);
+            const profileData = await profileResponse.json();
+            setSelectedProfile(profileData.profile);
+            
+            setConversation((prev) => [
+                ...prev,
+                {
+                    id: "profile-result",
+                    type: "question",
+                    content: profileData.text,
+                },
+            ]);
+            
             setIsLoadingProfile(false);
             
-            // Then send to main chat with profile as context
-            sendMessage(
-                { text: answer },
-                {
-                    body: {
-                        context: `Name: ${userName}\nGender: ${userGender}\nProfile: ${profile}\n${contextMessage}`,
-                    },
-                }
-            );
+            // //! DO NOT REMOVE THIS COMMENT - WE WILL NEED IT LATER
+            // sendMessage(
+            //     { text: answer },
+            //     {
+            //         body: {
+            //             context: `Name: ${userName}\nGender: ${userGender}\nProfile: ${profile}\n${contextMessage}`,
+            //         },
+            //     }
+            // );
         } catch (error) {
             console.error("Error getting profile selection:", error);
             setIsLoadingProfile(false);
@@ -271,7 +287,7 @@ export default function ChatbotPage() {
                 {
                     id: "profile-error",
                     type: "question",
-                    content: "אירעה שגיאה בניתוח הפרופיל. אנא נסה שוב מאוחר יותר.",
+                    content: systemMessages.profileError,
                 },
             ]);
         }
@@ -293,13 +309,12 @@ export default function ChatbotPage() {
         if (!cleanPhone || !validatePhone(cleanPhone)) return;
 
         try {
-            // Get AI response text
-            const aiResponse = messages
-                .filter(msg => msg.role === "assistant")
-                .map(msg => msg.parts.filter(part => part.type === "text").map(part => part.text).join(""))
-                .join("\n");
+            //! DO NOT REMOVE THIS COMMENT - WE WILL NEED IT LATER
+            // const aiResponse = messages
+            //     .filter(msg => msg.role === "assistant")
+            //     .map(msg => msg.parts.filter(part => part.type === "text").map(part => part.text).join(""))
+            //     .join("\n");
 
-            // Send to webhook
             const response = await fetch("/api/webhook", {
                 method: "POST",
                 headers: {
@@ -308,7 +323,6 @@ export default function ChatbotPage() {
                 body: JSON.stringify({
                     phone: cleanPhone,
                     questionAnswerPairs,
-                    aiResponse,
                 }),
             });
 
@@ -356,42 +370,43 @@ export default function ChatbotPage() {
         return <MessageBubble key={item.id} role="user" content={item.content} />;
     };
 
-    const renderAiResponse = () => {
-        return (
-            <>
-                {/* AI Messages - Only render if there's actual content */}
-                {messages
-                    .filter((message) => message.role === "assistant")
-                    .filter((message) => message.parts.some(part => part.type === "text" && part.text.trim() !== ""))
-                    .map((message) => (
-                        <MessageBubble key={message.id} role="assistant" content="">
-                            {message.parts.map((part, index) => {
-                                switch (part.type) {
-                                    case "text":
-                                        return (
-                                            <div key={`${message.id}-${index}`} className="whitespace-pre-wrap">{part.text}</div>
-                                        );
-                                    default:
-                                        return null;
-                                }
-                            })}
-                        </MessageBubble>
-                    ))}
+    //! DO NOT REMOVE THIS COMMENT - WE WILL NEED IT LATER
+    // const renderAiResponse = () => {
+    //     return (
+    //         <>
+    //             {/* AI Messages - Only render if there's actual content */}
+    //             {messages
+    //                 .filter((message) => message.role === "assistant")
+    //                 .filter((message) => message.parts.some(part => part.type === "text" && part.text.trim() !== ""))
+    //                 .map((message) => (
+    //                     <MessageBubble key={message.id} role="assistant" content="">
+    //                         {message.parts.map((part, index) => {
+    //                             switch (part.type) {
+    //                                 case "text":
+    //                                     return (
+    //                                         <div key={`${message.id}-${index}`} className="whitespace-pre-wrap">{part.text}</div>
+    //                                     );
+    //                                 default:
+    //                                     return null;
+    //                             }
+    //                         })}
+    //                     </MessageBubble>
+    //                 ))}
 
-                {/* Loading indicator for AI response and profile selection */}
-                {(status === "submitted" || status === "streaming" || isLoadingProfile) && (
-                    <MessageBubble role="assistant" content="">
-                        <Loader />
-                    </MessageBubble>
-                )}
-            </>
-        );
-    };
+    //             {/* Loading indicator for AI response and profile selection */}
+    //             {(status === "submitted" || status === "streaming" || isLoadingProfile) && (
+    //                 <MessageBubble role="assistant" content="">
+    //                     <Loader />
+    //                 </MessageBubble>
+    //             )}
+    //         </>
+    //     );
+    // };
 
     // Derived state for UI rendering
     const currentQuestion = conversation[conversation.length - 1]?.questionData;
     const showInput = conversationStarted && currentQuestion && currentQuestion.type !== "multiple" && !questionnaireComplete;
-    const showPhoneInput = questionnaireComplete && status === "ready" && !phoneSubmitted && !isLoadingProfile;
+    const showPhoneInput = questionnaireComplete && !phoneSubmitted && !isLoadingProfile;
 
     // Auto-focus text input when it becomes available
     useEffect(() => {
@@ -409,16 +424,8 @@ export default function ChatbotPage() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4" dir="rtl">
-            {/* Chat Header */}
-            <div className={`text-white p-3 rounded-t-lg ${styles["chat-header"]}`}>
-                <h1
-                    className={`text-4xl font-black text-center text-[var(--primary-green)] ${styles["chat-title"]}`}
-                >
-                    FUTURE AI
-                </h1>
-            </div>
             <div
-                className={`w-full max-w-xl h-[600px] rounded-3xl border-2 border-t-0 border-[var(--primary-green)] flex flex-col ${styles["chat-container"]}`}
+                className={`w-full max-w-md h-[600px] rounded-3xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex flex-col ${styles["chat-container"]}`}
             >
 
                 {/* Messages Container */}
@@ -426,18 +433,19 @@ export default function ChatbotPage() {
                     {/* <RobotModel /> */}
                     
                     {/* Greeting Messages */}
-                    {greetingMessages.map((message, index) => (
+                    {initMessages.map((message, index) => (
                         <MessageBubble key={`greeting-${index}`} role="system" content={message} />
                     ))}
 
                     {/* Error State */}
-                    {error && (
+                    {/* //! DO NOT REMOVE THIS COMMENT - WE WILL NEED IT LATER */}
+                    {/* {error && (
                         <div className="flex justify-center">
                             <div className="bg-red-900 text-red-300 px-4 py-2 rounded-lg text-sm border border-red-700">
                                 {error instanceof Error ? error.message : error}
                             </div>
                         </div>
-                    )}
+                    )} */}
 
                     {/* Loading State */}
                     {!conversationStarted && isLoading && (
@@ -471,12 +479,9 @@ export default function ChatbotPage() {
                         </>
                     )}
 
+                    {/* //!DO NOT REMOVE THIS COMMENT - WE WILL NEED IT LATER */}
+                    {/* {questionnaireComplete && renderAiResponse()} */}
 
-
-                    {/* AI Responses - Show only after questionnaire is complete */}
-                    {questionnaireComplete && renderAiResponse()}
-
-                    {/* Profile Image - Show after AI finishes streaming */}
                     {showProfileImage && selectedProfile && (
                         <MessageBubble role="system" content="">
                             <div className="flex justify-center">
@@ -503,7 +508,7 @@ export default function ChatbotPage() {
                     {showCtaMessage && !phoneSubmitted && (
                         <MessageBubble 
                             role="system" 
-                            content={`${userName}, כדי שיועץ פיננסי מוסמך יוכל לחזור אליך ולסייע לך ביצירת תוכנית פיננסית מותאמת אישית, אנא ${userGender === "male" ? "השאר" : "השאירי"} את מספר הטלפון שלך.`}
+                            content={getCtaMessage(userName, userGender)}
                         />
                     )}
 
@@ -511,7 +516,7 @@ export default function ChatbotPage() {
                     {phoneSubmitted && (
                         <MessageBubble 
                             role="system" 
-                            content="תודה! הפרטים נשלחו ויועץ פיננסי יצור איתך קשר בקרוב."
+                            content={systemMessages.success}
                         />
                     )}
                 </div>

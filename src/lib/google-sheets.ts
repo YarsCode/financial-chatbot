@@ -21,6 +21,7 @@ export interface SheetAnswer {
   answer_id: string;
   answer: string;
   next_question: string;
+  score?: string;
 }
 
 export interface ParsedQuestion extends SheetQuestion {
@@ -32,6 +33,7 @@ async function fetchSheet(range: string): Promise<string[][]> {
   const res = await fetch(url);
 
   const data = await res.json();
+  // console.log("Sheets: ", data);
   return data.values;
 }
 

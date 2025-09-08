@@ -5,10 +5,6 @@
     -webkit-backdrop-filter: blur(10px) saturate(180%); */
 }
 
-/* .chat-header {
-  perspective: 200px;
-} */
-
 .chat-title {
     background: var(--primary-green);
     background-clip: text;

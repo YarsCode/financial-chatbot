@@ -21,6 +21,7 @@ export async function GET() {
           question_id: a.question_id,
           answer: a.answer,
           next_question: a.next_question,
+          score: a.score,
         }));
 
         //TODO: check if this is needed
