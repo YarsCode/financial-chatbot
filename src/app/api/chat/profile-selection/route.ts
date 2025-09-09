@@ -1,5 +1,5 @@
 import { financialProfiles, getProfileByScore } from "@/constants/financial-profiles";
-import { getFinalMessage } from "@/constants/messages";
+import { getSelectedProfileDescription } from "@/constants/messages";
 
 export async function POST(req: Request) {
     try {
@@ -9,11 +9,11 @@ export async function POST(req: Request) {
         const profile = financialProfiles[profileName];
         const profileDescription = profile[gender === "male" ? "male" : "female"];
         const genderedProfileName = profile[gender === "male" ? "maleName" : "femaleName"];
-        const finalMessage = getFinalMessage(userName, genderedProfileName, profileDescription, gender);
+        const selectedProfileDescriptionMessages = getSelectedProfileDescription(userName, genderedProfileName, profileDescription, gender);
 
         return Response.json({
             profile: profileName,
-            text: finalMessage
+            messages: selectedProfileDescriptionMessages
         });
     } catch (error) {
         console.error("Error generating profile selection:", error);

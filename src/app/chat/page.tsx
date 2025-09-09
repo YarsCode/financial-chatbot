@@ -9,8 +9,7 @@ import { Loader } from "@/components/Loader";
 // import { RobotModel } from "@/components/RobotModel";
 import styles from "./page.module.css";
 import { IoSend } from "react-icons/io5";
-import Image from "next/image";
-import { initMessages, systemMessages, getCtaMessage, getGreetingMessage } from "@/constants/messages";
+import { initMessages, systemMessages, phoneRequestMessage, getGreetingMessage } from "@/constants/messages";
 import { replacePlaceholders } from "@/utils/text";
 
 
@@ -31,7 +30,7 @@ export default function ChatbotPage() {
     const [inputValue, setInputValue] = useState("");
     const [pendingNextQuestion, setPendingNextQuestion] = useState(false);
     const [questionAnswerPairs, setQuestionAnswerPairs] = useState<QuestionAnswerPair[]>([]);
-    const [questionnaireComplete, setQuestionnaireComplete] = useState(false);
+    const [isQuestionnaireComplete, setIsQuestionnaireComplete] = useState(false);
     const [isLoadingFirstQuestion, setIsLoadingFirstQuestion] = useState(false);
     const [phoneValue, setPhoneValue] = useState("");
     const [phoneSubmitted, setPhoneSubmitted] = useState(false);
@@ -39,23 +38,23 @@ export default function ChatbotPage() {
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
     const [userName, setUserName] = useState("");
     const [userGender, setUserGender] = useState("");
-    const [showCtaMessage, setShowCtaMessage] = useState(false);
-    const [showProfileImage, setShowProfileImage] = useState(false);
+    const [showPhoneRequestMessage, setShowPhoneRequestMessage] = useState(false);
+    const [profileSelectionComplete, setProfileSelectionComplete] = useState(false);
     const [userScore, setUserScore] = useState(0);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const textInputRef = useRef<HTMLInputElement>(null);
     const phoneInputRef = useRef<HTMLInputElement>(null);
 
     // Function to get profile image path
-    const getProfileImagePath = (profile: string): string => {
-        const profileMap: Record<string, string> = {
-            "המתכנן": "/financial-profiles-images/financial_profile_metachnen.png",
-            "המהמר": "/financial-profiles-images/financial_profile_mehamer.png", 
-            "המאוזן": "/financial-profiles-images/financial_profile_meuzan.png",
-            "המחושב": "/financial-profiles-images/financial_profile_mehushav.png",
-        };
-        return profileMap[profile] || "";
-    };
+    // const getProfileImagePath = (profile: string): string => {
+    //     const profileMap: Record<string, string> = {
+    //         "המתכנן": "/financial-profiles-images/financial_profile_metachnen.png",
+    //         "המהמר": "/financial-profiles-images/financial_profile_mehamer.png", 
+    //         "המאוזן": "/financial-profiles-images/financial_profile_meuzan.png",
+    //         "המחושב": "/financial-profiles-images/financial_profile_mehushav.png",
+    //     };
+    //     return profileMap[profile] || "";
+    // };
 
     // Load questions on component mount
     useEffect(() => {
@@ -84,21 +83,15 @@ export default function ChatbotPage() {
         if (container) {
             container.scrollTop = container.scrollHeight;
         }
-    }, [conversation, showProfileImage, showCtaMessage]);
+    }, [conversation, showPhoneRequestMessage]);
 
-    // Show profile image when AI finishes streaming
-    useEffect(() => {
-        if (questionnaireComplete && selectedProfile && !showProfileImage && !isLoadingProfile) {
-            setShowProfileImage(true);
-        }
-    }, [questionnaireComplete, selectedProfile, showProfileImage, isLoadingProfile]);
 
-    // Show CTA message when profile image is displayed
     useEffect(() => {
-        if (showProfileImage && !showCtaMessage) {
-            setShowCtaMessage(true);
+        if (isQuestionnaireComplete && profileSelectionComplete && !showPhoneRequestMessage) {
+            setShowPhoneRequestMessage(true);
+            setIsLoadingProfile(false);
         }
-    }, [showProfileImage, showCtaMessage]);
+    }, [isQuestionnaireComplete, profileSelectionComplete, showPhoneRequestMessage]);
     
     useEffect(() => {
         if (!isLoading) {
@@ -166,7 +159,6 @@ export default function ChatbotPage() {
         if (typeof answer === 'object' && answer.score) {
             const score = parseInt(answer.score) || 0;
             newScore = userScore + score;
-            console.log('Score:', newScore);
             setUserScore(newScore);
         }
 
@@ -214,8 +206,15 @@ export default function ChatbotPage() {
         setInputValue("");
 
         const isLastQuestion = currentQuestion.isLastQuestion || currentQuestionIndex === questions.length - 1;
-        
-        if (isLastQuestion) {
+        console.log('currentQuestion.id', currentQuestion.id);
+        if (currentQuestion.id === 'q17') {
+            await handleProfileSelection(answerText, newQAPair, newScore);
+            setIsLoading(true);
+
+            setTimeout(() => {
+                setIsLoading(false);
+            }, Math.random() * 600 + 1200); // Random delay between 1200-1800ms
+        } else if (isLastQuestion) {
             await handleFinalQuestionSubmission(answerText, newQAPair, newScore);
         } else {
             setIsLoading(true);
@@ -230,19 +229,7 @@ export default function ChatbotPage() {
         }
     };
 
-    // Function that runs only at the end of the questionnaire
-    const handleFinalQuestionSubmission = async (answer: string, newQAPair: QuestionAnswerPair, finalScore: number) => {
-        // Add analysis message to conversation instantly
-        setConversation((prev) => [
-            ...prev,
-            {
-                id: "analysis-message",
-                type: "question",
-                content: systemMessages.analysisInProgress,
-            },
-        ]);
-        
-        setQuestionnaireComplete(true);
+    const handleProfileSelection = async (answer: string, newQAPair: QuestionAnswerPair, finalScore: number): Promise<void> => {
         setIsLoadingProfile(true);
         
         try {
@@ -258,16 +245,24 @@ export default function ChatbotPage() {
             const profileData = await profileResponse.json();
             setSelectedProfile(profileData.profile);
             
-            setConversation((prev) => [
-                ...prev,
-                {
-                    id: "profile-result",
-                    type: "question",
-                    content: profileData.text,
-                },
-            ]);
+            // Return a Promise that resolves when the setTimeout completes
+            return new Promise<void>((resolve) => {
+                setTimeout(() => {
+                    setConversation((prev) => [
+                        ...prev,
+                        ...profileData.messages.map((message: string, index: number) => ({
+                            id: `profile-result-${index}`,
+                            type: "question" as const,
+                            content: message,
+                        })),
+                    ]);
+                    
+                    setIsLoadingProfile(false);
+                    setProfileSelectionComplete(true);
+                    resolve(); // Resolve the Promise when everything is complete
+                }, Math.random() * 1000 + 2000); // Random delay between 2000-3000ms
+            });
             
-            setIsLoadingProfile(false);
             
             // //! DO NOT REMOVE THIS COMMENT - WE WILL NEED IT LATER
             // sendMessage(
@@ -281,6 +276,7 @@ export default function ChatbotPage() {
         } catch (error) {
             console.error("Error getting profile selection:", error);
             setIsLoadingProfile(false);
+            setProfileSelectionComplete(true);
             // Display error message
             setConversation((prev) => [
                 ...prev,
@@ -291,6 +287,14 @@ export default function ChatbotPage() {
                 },
             ]);
         }
+    };
+
+    // Function that runs only at the end of the questionnaire
+    const handleFinalQuestionSubmission = async (answer: string, newQAPair: QuestionAnswerPair, finalScore: number) => {        
+        setIsQuestionnaireComplete(true);
+        setIsLoadingProfile(true);
+        
+        
     };
 
 
@@ -405,8 +409,8 @@ export default function ChatbotPage() {
 
     // Derived state for UI rendering
     const currentQuestion = conversation[conversation.length - 1]?.questionData;
-    const showInput = conversationStarted && currentQuestion && currentQuestion.type !== "multiple" && !questionnaireComplete;
-    const showPhoneInput = questionnaireComplete && !phoneSubmitted && !isLoadingProfile;
+    const showInput = conversationStarted && currentQuestion && currentQuestion.type !== "multiple" && !isQuestionnaireComplete;
+    const showPhoneInput = isQuestionnaireComplete && !phoneSubmitted && !isLoading;
 
     // Auto-focus text input when it becomes available
     useEffect(() => {
@@ -476,13 +480,18 @@ export default function ChatbotPage() {
                                     <Loader />
                                 </MessageBubble>
                             )}
+                            {isLoadingProfile && (
+                                <MessageBubble role="system" content="">
+                                    <Loader />
+                                </MessageBubble>
+                            )}
                         </>
                     )}
 
                     {/* //!DO NOT REMOVE THIS COMMENT - WE WILL NEED IT LATER */}
                     {/* {questionnaireComplete && renderAiResponse()} */}
 
-                    {showProfileImage && selectedProfile && (
+                    {/* {showProfileImage && selectedProfile && (
                         <MessageBubble role="system" content="">
                             <div className="flex justify-center">
                                 <Image 
@@ -502,13 +511,13 @@ export default function ChatbotPage() {
                                 />
                             </div>
                         </MessageBubble>
-                    )}
+                    )} */}
 
                     {/* Call to Action Message */}
-                    {showCtaMessage && !phoneSubmitted && (
+                    {showPhoneRequestMessage && !phoneSubmitted && (
                         <MessageBubble 
                             role="system" 
-                            content={getCtaMessage(userName, userGender)}
+                            content={phoneRequestMessage}
                         />
                     )}
 
@@ -534,7 +543,7 @@ export default function ChatbotPage() {
                                     <input
                                         ref={textInputRef}
                                         placeholder="כתוב את התשובה שלך..."
-                                        className="flex-1 px-4 py-3 border border-[#aeaeae] bg-white rounded-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[var(--primary-green)] focus:border-[var(--primary-green)]"
+                                        className="flex-1 min-w-0 px-4 py-3 border border-[#aeaeae] bg-white rounded-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[var(--primary-green)] focus:border-[var(--primary-green)]"
                                         value={inputValue}
                                         onChange={(e) => setInputValue(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && inputValue.trim() && handleAnswer(inputValue.trim())}
@@ -542,7 +551,7 @@ export default function ChatbotPage() {
                                 )}
                                 
                                 {showInput && (currentQuestion?.type === "number" || currentQuestion?.type === "sum") && (
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                         <NumberInput
                                             type={currentQuestion.type}
                                             value={inputValue}
@@ -559,7 +568,7 @@ export default function ChatbotPage() {
                                         type="tel"
                                         dir="rtl"
                                         placeholder="מספר הטלפון שלך..."
-                                        className={`flex-1 px-4 py-3 border rounded-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[var(--primary-green)] focus:border-[var(--primary-green)] ${
+                                        className={`flex-1 min-w-0 px-4 py-3 border rounded-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[var(--primary-green)] focus:border-[var(--primary-green)] ${
                                             phoneValue.trim() && !validatePhone(phoneValue.trim()) 
                                                 ? 'border-red-500 bg-red-50' 
                                                 : 'border-[#aeaeae] bg-white'
@@ -580,10 +589,10 @@ export default function ChatbotPage() {
                                 <button
                                     type={showPhoneInput ? "submit" : "button"}
                                     onClick={showInput ? () => inputValue.trim() && handleAnswer(inputValue.trim()) : undefined}
-                                    className="pr-1 bg-[var(--primary-green)] hover:bg-[var(--primary-green-hover)] disabled:bg-[#888888d4] disabled:hover:bg-[#888888d4] disabled:cursor-not-allowed text-gray-900 font-medium rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--primary-green)] flex items-center justify-center min-w-[60px]"
+                                    className="flex-shrink-0 pr-1 bg-[var(--primary-green)] hover:bg-[var(--primary-green-hover)] disabled:bg-[#888888d4] disabled:hover:bg-[#888888d4] disabled:cursor-not-allowed text-gray-900 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-green)] flex items-center justify-center w-[60px] h-[48px] rounded-full max-[349px]:w-[48px] max-[349px]:h-[48px]"
                                     disabled={showInput ? !inputValue.trim() : !phoneValue.trim() || !validatePhone(phoneValue.trim())}
                                 >
-                                    <IoSend className="rotate-180 text-2xl" />
+                                    <IoSend className="rotate-180 text-2xl max-[349px]:text-xl" />
                                 </button>
                             </div>
                         </form>
@@ -597,9 +606,9 @@ export default function ChatbotPage() {
                         <div className="flex justify-center">
                             <button
                                 onClick={startConversation}
-                                className={`px-6 py-3 bg-[var(--primary-green)] hover:bg-[var(--primary-green-hover)] text-white rounded-3xl transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--primary-green)] text-xl font-bold cursor-pointer ${styles["start-button"]}`}
+                                className={`px-6 py-3 bg-[var(--primary-green)] hover:bg-[var(--primary-green-hover)] text-white rounded-3xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-green)] text-xl font-bold cursor-pointer ${styles["start-button"]}`}
                             >
-                                מתחילים
+                                שנתחיל?
                             </button>
                         </div>
                     </div>
