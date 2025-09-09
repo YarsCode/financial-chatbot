@@ -41,6 +41,7 @@ export default function ChatbotPage() {
     const [showPhoneRequestMessage, setShowPhoneRequestMessage] = useState(false);
     const [profileSelectionComplete, setProfileSelectionComplete] = useState(false);
     const [userScore, setUserScore] = useState(0);
+    const [showInputArea, setShowInputArea] = useState(false);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const textInputRef = useRef<HTMLInputElement>(null);
     const phoneInputRef = useRef<HTMLInputElement>(null);
@@ -426,6 +427,18 @@ export default function ChatbotPage() {
         }
     }, [showPhoneInput]);
 
+    // Show input area with delay after question appears
+    useEffect(() => {
+        if (showInput || showPhoneInput) {
+            setShowInputArea(false);
+            const timer = setTimeout(() => {
+                setShowInputArea(true);
+            }, 200); // Delay to show after question animation (500ms + 200ms buffer)
+            
+            return () => clearTimeout(timer);
+        }
+    }, [showInput, showPhoneInput]);
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4" dir="rtl">
             <div
@@ -532,7 +545,11 @@ export default function ChatbotPage() {
 
                 {/* Input Area */}
                 {(showInput || showPhoneInput) && (
-                    <>
+                    <div className={`transition-opacity transition-transform duration-200 ease-out ${
+                        showInputArea 
+                            ? "opacity-100 translate-y-0" 
+                            : "opacity-0 translate-y-4"
+                    }`}>
                         <div className="px-4">
                             <div className="w-full h-px bg-gray-300"></div>
                         </div>
@@ -597,7 +614,7 @@ export default function ChatbotPage() {
                             </div>
                         </form>
                         </div>
-                    </>
+                    </div>
                 )}
 
                 {/* Start Conversation Button at bottom */}
