@@ -82,7 +82,12 @@ export default function ChatbotPage() {
     useEffect(() => {
         const container = messagesContainerRef.current;
         if (container) {
-            container.scrollTop = container.scrollHeight;
+            // Don't scroll if the last message is from question q18
+            const isQ18Message = conversation[conversation.length - 1]?.id === 'q18';
+            
+            if (!isQ18Message) {
+                container.scrollTop = container.scrollHeight;
+            }
         }
     }, [conversation, showPhoneRequestMessage]);
 

@@ -43,7 +43,7 @@ export const financialProfiles: Record<string, FinancialProfile> = {
 export function getProfileByScore(score: number): string {
   if (score >= 10 && score <= 17) return "המתכנן";
   if (score >= 18 && score <= 25) return "המחושב";
-  if (score >= 26 && score <= 33) return "המאוזן";
-  if (score >= 34 && score <= 40) return "המהמר";
+  if (score >= 26 && score <= 33) return "המהמר";
+  if (score >= 34 && score <= 40) return "המאוזן";
   throw new Error("Invalid score");
 }
