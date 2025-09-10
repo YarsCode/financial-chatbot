@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 interface WebhookData {
   phone: string;
+  userName: string;
   questionAnswerPairs: Array<{
     question: string;
     answer: string;
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
   try {
     const data: WebhookData = await request.json();
     
-    const webhookUrl = 'https://webhook.site/a213d6bd-352c-489a-9312-e16e6943c2df';
+    const webhookUrl = 'https://hook.eu1.make.com/9q2s3leha2qc1uojxudk2m7uyk31h5pi';
     
     const response = await fetch(webhookUrl, {
       method: 'POST',
@@ -22,8 +23,8 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         phone: data.phone,
+        userName: data.userName,
         conversation: data.questionAnswerPairs,
-        aiResponse: data.aiResponse,
         timestamp: new Date().toISOString(),
       }),
     });
