@@ -7,9 +7,10 @@ interface NumberInputProps {
   onSubmit: () => void;
   placeholder?: string;
   className?: string;
+  onBlur?: () => void;
 }
 
-export function NumberInput({ type, value, onChange, onSubmit, placeholder, className }: NumberInputProps) {
+export function NumberInput({ type, value, onChange, onSubmit, placeholder, className, onBlur }: NumberInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export function NumberInput({ type, value, onChange, onSubmit, placeholder, clas
         value={value}
         onChange={handleChange}
         onKeyPress={handleKeyPress}
+        onBlur={onBlur}
         placeholder={placeholder || (type === 'sum' ? 'הכנס סכום' : 'הכנס מספר')}
         className={`w-full px-4 py-3 border border-[#aeaeae] bg-white rounded-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[var(--primary-green)] focus:border-[var(--primary-green)] ${
           type === 'sum' ? 'pl-8' : ''

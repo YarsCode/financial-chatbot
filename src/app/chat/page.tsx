@@ -46,6 +46,19 @@ export default function ChatbotPage() {
     const textInputRef = useRef<HTMLInputElement>(null);
     const phoneInputRef = useRef<HTMLInputElement>(null);
 
+    // Function to center chat on mobile when input loses focus
+    const handleInputBlur = () => {
+        if (window.innerWidth <= 768) { // Mobile breakpoint
+            const chatContainer = document.querySelector('[class*="chat-container"]') as HTMLElement;
+            if (chatContainer) {
+                chatContainer.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }
+        }
+    };
+
     // Function to get profile image path
     // const getProfileImagePath = (profile: string): string => {
     //     const profileMap: Record<string, string> = {
@@ -570,6 +583,7 @@ export default function ChatbotPage() {
                                         value={inputValue}
                                         onChange={(e) => setInputValue(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && inputValue.trim() && handleAnswer(inputValue.trim())}
+                                        onBlur={handleInputBlur}
                                     />
                                 )}
                                 
@@ -581,6 +595,7 @@ export default function ChatbotPage() {
                                             onChange={setInputValue}
                                             onSubmit={() => inputValue.trim() && handleAnswer(inputValue.trim())}
                                             placeholder={currentQuestion.type === "sum" ? "הכנס סכום" : "הכנס מספר"}
+                                            onBlur={handleInputBlur}
                                         />
                                     </div>
                                 )}
@@ -606,6 +621,7 @@ export default function ChatbotPage() {
                                             }
                                             e.preventDefault();
                                         }}
+                                        onBlur={handleInputBlur}
                                     />
                                 )}
 
