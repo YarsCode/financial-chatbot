@@ -46,32 +46,6 @@ export default function ChatbotPage() {
     const textInputRef = useRef<HTMLInputElement>(null);
     const phoneInputRef = useRef<HTMLInputElement>(null);
 
-    // Function to center chat on mobile when input loses focus
-    const handleInputBlur = () => {
-        if (window.innerWidth <= 768) { // Mobile breakpoint
-            // For iframe implementation, scroll the parent window
-            if (window.parent && window.parent !== window) {
-                // Get the iframe element in the parent document
-                const iframe = window.parent.document.querySelector('body.wp-singular') as HTMLElement;
-                if (iframe) {
-                    iframe.scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
-                    });
-                }
-            } else {
-                // Fallback for non-iframe usage
-                const chatContainer = document.querySelector('body.wp-singular') as HTMLElement;
-                if (chatContainer) {
-                    chatContainer.scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
-                    });
-                }
-            }
-        }
-    };
-
     // Function to get profile image path
     // const getProfileImagePath = (profile: string): string => {
     //     const profileMap: Record<string, string> = {
@@ -472,7 +446,7 @@ export default function ChatbotPage() {
     }, [showInput, showPhoneInput]);
 
     return (
-        <div className="flex justify-center m-4" dir="rtl">
+        <div className="flex justify-center items-center min-h-screen m-4" dir="rtl">
             <div
                 className={`w-full max-w-md h-[600px] rounded-3xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex flex-col ${styles["chat-container"]}`}
             >
@@ -596,7 +570,6 @@ export default function ChatbotPage() {
                                         value={inputValue}
                                         onChange={(e) => setInputValue(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && inputValue.trim() && handleAnswer(inputValue.trim())}
-                                        onBlur={handleInputBlur}
                                     />
                                 )}
                                 
@@ -608,7 +581,6 @@ export default function ChatbotPage() {
                                             onChange={setInputValue}
                                             onSubmit={() => inputValue.trim() && handleAnswer(inputValue.trim())}
                                             placeholder={currentQuestion.type === "sum" ? "הכנס סכום" : "הכנס מספר"}
-                                            onBlur={handleInputBlur}
                                         />
                                     </div>
                                 )}
@@ -634,7 +606,6 @@ export default function ChatbotPage() {
                                             }
                                             e.preventDefault();
                                         }}
-                                        onBlur={handleInputBlur}
                                     />
                                 )}
 
