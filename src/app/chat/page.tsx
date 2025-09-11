@@ -448,7 +448,7 @@ export default function ChatbotPage() {
     return (
         <div className="flex justify-center m-4" dir="rtl">
             <div
-                className={`w-full max-w-md h-[calc(100vh-2rem)] sm:h-[600px] rounded-3xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex flex-col ${styles["chat-container"]}`}
+                className={`w-full max-w-md h-[600px] rounded-3xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex flex-col ${styles["chat-container"]}`}
             >
 
                 {/* Messages Container */}
