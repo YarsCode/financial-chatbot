@@ -570,7 +570,7 @@ export default function ChatbotPage() {
                                         value={inputValue}
                                         onChange={(e) => setInputValue(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && inputValue.trim() && handleAnswer(inputValue.trim())}
-                                        onBlur={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                        onBlur={() => window.parent.postMessage({ action: "scrollTop" }, "*")}
                                     />
                                 )}
                                 
@@ -607,7 +607,7 @@ export default function ChatbotPage() {
                                             }
                                             e.preventDefault();
                                         }}
-                                        onBlur={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                        onBlur={() => window.parent.postMessage({ action: "scrollTop" }, "*")}
                                     />
                                 )}
 
