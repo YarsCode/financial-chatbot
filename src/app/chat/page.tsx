@@ -52,7 +52,7 @@ export default function ChatbotPage() {
             // For iframe implementation, scroll the parent window
             if (window.parent && window.parent !== window) {
                 // Get the iframe element in the parent document
-                const iframe = window.parent.document.querySelector('iframe[src*="chat"]') as HTMLElement;
+                const iframe = window.parent.document.querySelector('body.wp-singular') as HTMLElement;
                 if (iframe) {
                     iframe.scrollIntoView({ 
                         behavior: 'smooth', 
@@ -61,7 +61,7 @@ export default function ChatbotPage() {
                 }
             } else {
                 // Fallback for non-iframe usage
-                const chatContainer = document.querySelector('[class*="chat-container"]') as HTMLElement;
+                const chatContainer = document.querySelector('body.wp-singular') as HTMLElement;
                 if (chatContainer) {
                     chatContainer.scrollIntoView({ 
                         behavior: 'smooth', 
