@@ -446,7 +446,7 @@ export default function ChatbotPage() {
     }, [showInput, showPhoneInput]);
 
     return (
-        <div className="flex justify-center items-center min-h-screen m-4" dir="rtl">
+        <div className="flex justify-center m-4" dir="rtl">
             <div
                 className={`w-full max-w-md h-[600px] rounded-3xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex flex-col ${styles["chat-container"]}`}
             >
@@ -570,6 +570,7 @@ export default function ChatbotPage() {
                                         value={inputValue}
                                         onChange={(e) => setInputValue(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && inputValue.trim() && handleAnswer(inputValue.trim())}
+                                        onBlur={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                     />
                                 )}
                                 
@@ -606,6 +607,7 @@ export default function ChatbotPage() {
                                             }
                                             e.preventDefault();
                                         }}
+                                        onBlur={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                     />
                                 )}
 
