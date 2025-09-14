@@ -325,6 +325,11 @@ export default function ChatbotPage() {
             //     .map(msg => msg.parts.filter(part => part.type === "text").map(part => part.text).join(""))
             //     .join("\n");
 
+            // Convert questionAnswerPairs to string format
+            const conversationString = questionAnswerPairs
+                .map(qa => `שאלה: ${qa.question}\nתשובה: ${qa.answer}`)
+                .join('\n\n');
+
             const response = await fetch("/api/webhook", {
                 method: "POST",
                 headers: {
@@ -333,7 +338,7 @@ export default function ChatbotPage() {
                 body: JSON.stringify({
                     phone: cleanPhone,
                     userName,
-                    questionAnswerPairs,
+                    questionAnswerPairs: conversationString,
                 }),
             });
 

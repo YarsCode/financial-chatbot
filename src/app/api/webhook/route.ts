@@ -3,10 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 interface WebhookData {
   phone: string;
   userName: string;
-  questionAnswerPairs: Array<{
-    question: string;
-    answer: string;
-  }>;
+  questionAnswerPairs: string;
   aiResponse: string;
 }
 
@@ -14,7 +11,11 @@ export async function POST(request: NextRequest) {
   try {
     const data: WebhookData = await request.json();
     
-    const webhookUrl = 'https://hook.eu1.make.com/9q2s3leha2qc1uojxudk2m7uyk31h5pi';
+    const webhookUrl = process.env.WEBHOOK_URL;
+    
+    if (!webhookUrl) {
+      throw new Error('WEBHOOK_URL environment variable is not set');
+    }
     
     const response = await fetch(webhookUrl, {
       method: 'POST',
